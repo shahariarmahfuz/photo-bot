@@ -19,43 +19,7 @@ logging.basicConfig(
 
 # Start কমান্ড
 async def start(update: Update, context: CallbackContext):
-    await update.message.reply_text("👋 *স্বাগতম\\!* দয়া করে একটি ছবি পাঠান, আমি সেটি আপলোড করব।", parse_mode="MarkdownV2")
-
-# ছবি হ্যান্ডলার (নরমাল আপলোড)
-async def handle_photo(update: Update, context: CallbackContext):
-    processing_message = await update.message.reply_text("⚡ *ছবিটি প্রসেস করা শুরু হয়েছে\\.\\.\\.*", parse_mode="MarkdownV2")
-
-    try:
-        photo = update.message.photo[-1]
-        file = await context.bot.get_file(photo.file_id)
-        response = requests.get(file.file_path)
-
-        if response.status_code != 200:
-            raise Exception("Failed to download image")
-
-        files = {"file": ("image.jpg", response.content, "image/jpeg")}
-        res = requests.post(UPLOAD_URL, files=files)
-
-        if res.status_code != 200:
-            raise Exception("Failed to upload image")
-
-        data = res.json()
-        final_url = f"{BASE_URL}{data['local_url']}"
-
-        safe_text = (
-            "✅ *আপলোড সম্পন্ন\\!* \n"
-            "🔗 *লিংক:* \n"
-            f"`{final_url}`"
-        )
-
-        await update.message.reply_text(safe_text, parse_mode="MarkdownV2")
-
-    except Exception as e:
-        logging.error(f"Error: {e}")
-        await update.message.reply_text("❌ *সমস্যা হয়েছে, পরে চেষ্টা করুন\\!*", parse_mode="MarkdownV2")
-
-    finally:
-        await context.bot.delete_message(chat_id=update.effective_chat.id, message_id=processing_message.message_id)
+    await update.message.reply_text("👋 *স্বাগতম\\!* এখানে আপনি `/add` কমান্ড এর মাধ্যমে এনিমি পেজের থাম্বনেইল আপলোড করতে পারবেন।", parse_mode="MarkdownV2")
 
 # ------------------ /add কমান্ড হ্যান্ডলার -------------------
 async def add_command(update: Update, context: CallbackContext) -> int:
@@ -90,7 +54,7 @@ async def get_img_ratio_2_3_photo(update: Update, context: CallbackContext) -> i
     except Exception as e:
         logging.error(f"Error uploading 2:3 image: {e}")
         await update.message.reply_text("❌ *2:3 থাম্বনেইল আপলোডে সমস্যা হয়েছে, আবার চেষ্টা করুন\\!*", parse_mode="MarkdownV2")
-        return ConversationHandler.END # অথবা অন্য কোন স্টেটে ফেরত যেতে পারেন
+        return ConversationHandler.END
 
     finally:
         await context.bot.delete_message(chat_id=update.effective_chat.id, message_id=processing_message_2_3.message_id)
@@ -154,15 +118,16 @@ async def get_img_ratio_16_9_photo(update: Update, context: CallbackContext) -> 
 def main():
     app = Application.builder().token(TOKEN).build()
     app.add_handler(CommandHandler("start", start))
-    app.add_handler(MessageHandler(filters.PHOTO & ~filters.COMMAND, handle_photo)) # শুধুমাত্র কমান্ড ছাড়া ফটো হ্যান্ডেল করবে
+    # নরমাল আপলোড হ্যান্ডলার রিমুভ করা হয়েছে
+    # app.add_handler(MessageHandler(filters.PHOTO & ~filters.COMMAND, handle_photo))
 
     app.add_handler(
         ConversationHandler(
             entry_points=[CommandHandler("add", add_command)],
             states={
                 ANIME_NUMBER: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_anime_number)],
-                IMG_RATIO_2_3_PHOTO: [MessageHandler(filters.PHOTO & ~filters.COMMAND, get_img_ratio_2_3_photo)], # PHOTO ফিল্টার ব্যবহার করুন
-                IMG_RATIO_16_9_PHOTO: [MessageHandler(filters.PHOTO & ~filters.COMMAND, get_img_ratio_16_9_photo)], # PHOTO ফিল্টার ব্যবহার করুন
+                IMG_RATIO_2_3_PHOTO: [MessageHandler(filters.PHOTO & ~filters.COMMAND, get_img_ratio_2_3_photo)],
+                IMG_RATIO_16_9_PHOTO: [MessageHandler(filters.PHOTO & ~filters.COMMAND, get_img_ratio_16_9_photo)],
             },
             fallbacks=[],
         )
