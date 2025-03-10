@@ -2,7 +2,8 @@ import logging
 import requests
 from telegram import Update
 from telegram.ext import Application, MessageHandler, filters, CommandHandler, CallbackContext
-from telegram.constants import ParseMode # Corrected import statement here
+from telegram.constants import ParseMode
+from telegram.utils.helpers import escape_markdown # Import escape_markdown
 
 
 TOKEN = "7305874644:AAEcpUBhpmmOrv0rE-0xTJsUSxsTmO5qZHw"
@@ -32,7 +33,8 @@ async def handle_photo(update: Update, context: CallbackContext):
         if res.status_code == 200:
             data = res.json()
             final_url = f"{BASE_URL}{data['local_url']}"  # **BASE_URL + /uploads/... যোগ করা**
-            markdown_link = f"`{final_url}`" # MarkdownV2 লিংক তৈরি করুন
+            escaped_url = escape_markdown(final_url, version=2) # Escape URL for MarkdownV2
+            markdown_link = f"`{escaped_url}`" # MarkdownV2 লিংক তৈরি করুন
             await context.bot.delete_message(chat_id=update.message.chat_id, message_id=processing_message.message_id) # প্রসেসিং বার্তা ডিলিট করুন
             await update.message.reply_text(f"✅ আপলোড সম্পন্ন!\n🔗 লিংক: {markdown_link}", parse_mode=ParseMode.MARKDOWN_V2) # MarkdownV2 সহ লিংক পাঠান
         else:
