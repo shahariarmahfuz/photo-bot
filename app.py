@@ -3,8 +3,6 @@ import requests
 from telegram import Update
 from telegram.ext import Application, MessageHandler, filters, CommandHandler, CallbackContext
 from telegram.constants import ParseMode
-from telegram.utils.helpers import escape_markdown # Import escape_markdown
-
 
 TOKEN = "7305874644:AAEcpUBhpmmOrv0rE-0xTJsUSxsTmO5qZHw"
 BASE_URL = "https://b15638c8-af87-4164-b831-414c185be4c8-00-3o5w0isf9c16d.pike.replit.dev"  # Flask সার্ভারের BASE URL
@@ -12,6 +10,19 @@ UPLOAD_URL = f"{BASE_URL}/photo"  # Flask API লিংক
 
 # **লগিং সেটআপ করুন**
 logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO)
+
+# MarkdownV2 স্পেশাল ক্যারেক্টার তালিকা
+MARKDOWN_V2_SPECIAL_CHARS = ['_', '*', '[', ']', '(', ')', '~', '`', '>', '#', '+', '-', '=', '|', '{', '}', '.', '!']
+
+# ম্যানুয়ালি MarkdownV2 স্পেশাল ক্যারেক্টার escape করার ফাংশন
+def manual_escape_markdown_v2(text):
+    escaped_text = ""
+    for char in text:
+        if char in MARKDOWN_V2_SPECIAL_CHARS:
+            escaped_text += "\\" + char
+        else:
+            escaped_text += char
+    return escaped_text
 
 # **Start Command**
 async def start(update: Update, context: CallbackContext):
@@ -33,8 +44,8 @@ async def handle_photo(update: Update, context: CallbackContext):
         if res.status_code == 200:
             data = res.json()
             final_url = f"{BASE_URL}{data['local_url']}"  # **BASE_URL + /uploads/... যোগ করা**
-            escaped_url = escape_markdown(final_url, version=2) # Escape URL for MarkdownV2
-            markdown_link = f"`{escaped_url}`" # MarkdownV2 লিংক তৈরি করুন
+            manual_escaped_url = manual_escape_markdown_v2(final_url) # ম্যানুয়ালি URL escape করুন
+            markdown_link = f"`{manual_escaped_url}`" # MarkdownV2 লিংক তৈরি করুন
             await context.bot.delete_message(chat_id=update.message.chat_id, message_id=processing_message.message_id) # প্রসেসিং বার্তা ডিলিট করুন
             await update.message.reply_text(f"✅ আপলোড সম্পন্ন!\n🔗 লিংক: {markdown_link}", parse_mode=ParseMode.MARKDOWN_V2) # MarkdownV2 সহ লিংক পাঠান
         else:
