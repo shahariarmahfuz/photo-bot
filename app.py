@@ -8,6 +8,14 @@ TOKEN = "7305874644:AAEcpUBhpmmOrv0rE-0xTJsUSxsTmO5qZHw"
 BASE_URL = "https://b15638c8-af87-4164-b831-414c185be4c8-00-3o5w0isf9c16d.pike.replit.dev"  # Flask সার্ভারের BASE URL
 UPLOAD_URL = f"{BASE_URL}/photo"  # Flask API লিংক
 
+# **MarkdownV2 Escape Function**
+def escape_markdown_v2(text: str) -> str:
+    # MarkdownV2 এ ব্যবহৃত ক্যারেক্টারগুলো escape করা
+    escape_characters = ['_', '*', '[', ']', '(', ')', '~', '`', '>', '#', '+', '-', '=', '|', '{', '}', '.', '!']
+    for char in escape_characters:
+        text = text.replace(char, '\\' + char)
+    return text
+
 # **লগিং সেটআপ**
 logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO)
 
@@ -36,8 +44,9 @@ async def handle_photo(update: Update, context: CallbackContext):
 
             # **প্রসেসিং মেসেজ মুছে ফেলা এবং লিংক মেসেজ পাঠানো**
             await processing_message.delete()
+            escaped_url = escape_markdown_v2(final_url)  # MarkdownV2 এর জন্য লিংক ইস্কেপ করা
             await update.message.reply_text(
-                f"✅ আপলোড সম্পন্ন!\n🔗 [লিংকはこちら]({final_url})", parse_mode="MarkdownV2"
+                f"✅ আপলোড সম্পন্ন!\n🔗 [লিংকはこちら]({escaped_url})", parse_mode="MarkdownV2"
             )
         else:
             # **আপলোডে সমস্যা হলে**
