@@ -4,7 +4,7 @@ from telegram import Update
 from telegram.ext import Application, MessageHandler, filters, CommandHandler, CallbackContext
 
 TOKEN = "7305874644:AAEcpUBhpmmOrv0rE-0xTJsUSxsTmO5qZHw"
-BASE_URL = "https://b15638c8-af87-4164-b831-414c185be4c8-00-3o5w0isf9c16d.pike.replit.dev"
+BASE_URL = "https://photo-upload-production-cd8b.up.railway.app"
 UPLOAD_URL = f"{BASE_URL}/photo"
 
 # লগিং সেটআপ
