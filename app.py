@@ -5,7 +5,8 @@ from telegram.ext import Application, MessageHandler, filters, CommandHandler, C
 
 # **Bot Token সেট করুন**  
 TOKEN = "7305874644:AAEcpUBhpmmOrv0rE-0xTJsUSxsTmO5qZHw"
-UPLOAD_URL = "https://b15638c8-af87-4164-b831-414c185be4c8-00-3o5w0isf9c16d.pike.replit.dev/photo"  # Flask সার্ভারের /photo API লিংক
+BASE_URL = "https://b15638c8-af87-4164-b831-414c185be4c8-00-3o5w0isf9c16d.pike.replit.dev"  # Flask সার্ভারের BASE URL
+UPLOAD_URL = f"{BASE_URL}/photo"  # Flask API লিংক
 
 # **লগিং সেটআপ করুন**
 logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO)
@@ -28,7 +29,8 @@ async def handle_photo(update: Update, context: CallbackContext):
 
         if res.status_code == 200:
             data = res.json()
-            await update.message.reply_text(f"✅ আপলোড সম্পন্ন! লিংক: {data['local_url']}")
+            final_url = f"{BASE_URL}{data['local_url']}"  # **BASE_URL + /uploads/... যোগ করা**
+            await update.message.reply_text(f"✅ আপলোড সম্পন্ন!\n🔗 লিংক: {final_url}")
         else:
             await update.message.reply_text("❌ আপলোডে সমস্যা হয়েছে, পরে চেষ্টা করুন।")
     else:
