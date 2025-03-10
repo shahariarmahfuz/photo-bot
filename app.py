@@ -1,7 +1,8 @@
 import logging
 import requests
-from telegram import Update, ParseMode  # Corrected import statement here
+from telegram import Update
 from telegram.ext import Application, MessageHandler, filters, CommandHandler, CallbackContext
+from telegram.constants import ParseMode # Corrected import statement here
 
 
 TOKEN = "7305874644:AAEcpUBhpmmOrv0rE-0xTJsUSxsTmO5qZHw"
