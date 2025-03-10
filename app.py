@@ -1,22 +1,14 @@
 import logging
 import requests
-from telegram import Update
+from telegram import Update, ParseMode
 from telegram.ext import Application, MessageHandler, filters, CommandHandler, CallbackContext
 
-# **Bot Token এবং Flask সার্ভারের BASE URL**
+
 TOKEN = "7305874644:AAEcpUBhpmmOrv0rE-0xTJsUSxsTmO5qZHw"
 BASE_URL = "https://b15638c8-af87-4164-b831-414c185be4c8-00-3o5w0isf9c16d.pike.replit.dev"  # Flask সার্ভারের BASE URL
 UPLOAD_URL = f"{BASE_URL}/photo"  # Flask API লিংক
 
-# **MarkdownV2 Escape Function**
-def escape_markdown_v2(text: str) -> str:
-    # MarkdownV2 এ ব্যবহৃত ক্যারেক্টারগুলো escape করা
-    escape_characters = ['_', '*', '[', ']', '(', ')', '~', '`', '>', '#', '+', '-', '=', '|', '{', '}', '.', '!']
-    for char in escape_characters:
-        text = text.replace(char, '\\' + char)
-    return text
-
-# **লগিং সেটআপ**
+# **লগিং সেটআপ করুন**
 logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO)
 
 # **Start Command**
@@ -25,12 +17,10 @@ async def start(update: Update, context: CallbackContext):
 
 # **ছবি আপলোড হ্যান্ডলার**
 async def handle_photo(update: Update, context: CallbackContext):
+    processing_message = await update.message.reply_text("⏳ ছবি প্রসেসিং শুরু হয়েছে...") # প্রসেসিং বার্তা পাঠান এবং মেসেজ অবজেক্ট ধরুন
     photo = update.message.photo[-1]  # সর্বোচ্চ রেজোলিউশনের ছবি নিন
     file = await context.bot.get_file(photo.file_id)
     file_path = file.file_path
-
-    # **প্রসেসিং মেসেজ পাঠানো**
-    processing_message = await update.message.reply_text("🔄 ছবিটি প্রসেস করা শুরু হয়েছে...")
 
     # **ছবি টেম্প ফাইলে ডাউনলোড করুন**
     response = requests.get(file_path)
@@ -41,20 +31,14 @@ async def handle_photo(update: Update, context: CallbackContext):
         if res.status_code == 200:
             data = res.json()
             final_url = f"{BASE_URL}{data['local_url']}"  # **BASE_URL + /uploads/... যোগ করা**
-
-            # **প্রসেসিং মেসেজ মুছে ফেলা এবং লিংক মেসেজ পাঠানো**
-            await processing_message.delete()
-            escaped_url = escape_markdown_v2(final_url)  # MarkdownV2 এর জন্য লিংক ইস্কেপ করা
-            await update.message.reply_text(
-                f"✅ আপলোড সম্পন্ন!\n🔗 [লিংকはこちら]({escaped_url})", parse_mode="MarkdownV2"
-            )
+            markdown_link = f"`{final_url}`" # MarkdownV2 লিংক তৈরি করুন
+            await context.bot.delete_message(chat_id=update.message.chat_id, message_id=processing_message.message_id) # প্রসেসিং বার্তা ডিলিট করুন
+            await update.message.reply_text(f"✅ আপলোড সম্পন্ন!\n🔗 লিংক: {markdown_link}", parse_mode=ParseMode.MARKDOWN_V2) # MarkdownV2 সহ লিংক পাঠান
         else:
-            # **আপলোডে সমস্যা হলে**
-            await processing_message.delete()
+            await context.bot.delete_message(chat_id=update.message.chat_id, message_id=processing_message.message_id) # প্রসেসিং বার্তা ডিলিট করুন যদি আপলোড ফেইল হয়
             await update.message.reply_text("❌ আপলোডে সমস্যা হয়েছে, পরে চেষ্টা করুন।")
     else:
-        # **ছবি ডাউনলোডে সমস্যা হলে**
-        await processing_message.delete()
+        await context.bot.delete_message(chat_id=update.message.chat_id, message_id=processing_message.message_id) # প্রসেসিং বার্তা ডিলিট করুন যদি ডাউনলোড ফেইল হয়
         await update.message.reply_text("❌ ছবি ডাউনলোড করা যায়নি, দয়া করে আবার চেষ্টা করুন।")
 
 # **বট চালু করুন**
