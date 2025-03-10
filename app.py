@@ -7,16 +7,19 @@ TOKEN = "7305874644:AAEcpUBhpmmOrv0rE-0xTJsUSxsTmO5qZHw"
 BASE_URL = "https://b15638c8-af87-4164-b831-414c185be4c8-00-3o5w0isf9c16d.pike.replit.dev"
 UPLOAD_URL = f"{BASE_URL}/photo"
 
+# লগিং সেটআপ
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", 
     level=logging.INFO
 )
 
+# Start কমান্ড
 async def start(update: Update, context: CallbackContext):
     await update.message.reply_text("👋 স্বাগতম! দয়া করে একটি ছবি পাঠান, আমি সেটি আপলোড করব।")
 
+# ছবি হ্যান্ডলার
 async def handle_photo(update: Update, context: CallbackContext):
-    # প্রসেসিং মেসেজ পাঠানো এবং স্টোর করা
+    # প্রসেসিং মেসেজ পাঠানো
     processing_message = await update.message.reply_text("⚡ ছবিটি প্রসেস করা শুরু হয়েছে...")
     
     try:
@@ -38,25 +41,33 @@ async def handle_photo(update: Update, context: CallbackContext):
         # লিংক তৈরি এবং মেসেজ ফরম্যাট
         data = res.json()
         final_url = f"{BASE_URL}{data['local_url']}"
-        markdown_link = f"`{final_url}`"
+        
+        # MarkdownV2 ফরম্যাটে মেসেজ তৈরি (স্পেশাল ক্যারেক্টার এস্কেপ করা)
+        safe_text = (
+            "✅ আপলোড সম্পন্ন\\!\n"  # '!' কে এস্কেপ করা হয়েছে
+            "🔗 লিংক: "
+            f"`{final_url}`"  # ব্যাকটিকসের মধ্যে URL রাখা হয়েছে
+        )
         
         # ফাইনাল মেসেজ পাঠানো
         await update.message.reply_text(
-            f"✅ আপলোড সম্পন্ন!\n🔗 লিংক: {markdown_link}",
+            safe_text,
             parse_mode="MarkdownV2"
         )
         
     except Exception as e:
         logging.error(f"Error: {e}")
-        await update.message.reply_text("❌ সমস্যা হয়েছে, পরে চেষ্টা করুন!")
+        # এরর মেসেজ পাঠানো (এস্কেপ করা '!' সহ)
+        await update.message.reply_text("❌ সমস্যা হয়েছে, পরে চেষ্টা করুন\\!", parse_mode="MarkdownV2")
         
     finally:
-        # প্রসেসিং মেসেজ ডিলিট
+        # প্রসেসিং মেসেজ ডিলিট করা
         await context.bot.delete_message(
             chat_id=update.effective_chat.id,
             message_id=processing_message.message_id
         )
 
+# বট চালু করা
 def main():
     app = Application.builder().token(TOKEN).build()
     app.add_handler(CommandHandler("start", start))
