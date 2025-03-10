@@ -4,7 +4,7 @@ from telegram import Update
 from telegram.ext import Application, MessageHandler, filters, CommandHandler, CallbackContext, ConversationHandler
 
 TOKEN = "7305874644:AAEcpUBhpmmOrv0rE-0xTJsUSxsTmO5qZHw"
-BASE_URL = "https://photo-upload-production-cd8b.up.railway.app"
+BASE_URL = "https://nekos-photo.onrender.com"
 UPLOAD_URL = f"{BASE_URL}/photo"
 API_URL = "https://nekofilx.onrender.com/photo"
 
