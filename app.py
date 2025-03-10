@@ -4,7 +4,7 @@ from telegram import Update
 from telegram.ext import Application, MessageHandler, filters, CommandHandler, CallbackContext
 
 # **Bot Token সেট করুন**  
-TOKEN = "YOUR_TELEGRAM_BOT_TOKEN"
+TOKEN = "7305874644:AAEcpUBhpmmOrv0rE-0xTJsUSxsTmO5qZHw"
 UPLOAD_URL = "https://b15638c8-af87-4164-b831-414c185be4c8-00-3o5w0isf9c16d.pike.replit.dev/photo"  # Flask সার্ভারের /photo API লিংক
 
 # **লগিং সেটআপ করুন**
