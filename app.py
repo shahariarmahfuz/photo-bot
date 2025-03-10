@@ -21,7 +21,7 @@ logging.basicConfig(
 async def start(update: Update, context: CallbackContext):
     await update.message.reply_text("👋 *স্বাগতম\\!* দয়া করে একটি ছবি পাঠান, আমি সেটি আপলোড করব।", parse_mode="MarkdownV2")
 
-# ছবি হ্যান্ডলার
+# ছবি হ্যান্ডলার (নরমাল আপলোড)
 async def handle_photo(update: Update, context: CallbackContext):
     processing_message = await update.message.reply_text("⚡ *ছবিটি প্রসেস করা শুরু হয়েছে\\.\\.\\.*", parse_mode="MarkdownV2")
 
@@ -68,7 +68,7 @@ async def get_anime_number(update: Update, context: CallbackContext) -> int:
     return IMG_RATIO_2_3_PHOTO
 
 async def get_img_ratio_2_3_photo(update: Update, context: CallbackContext) -> int:
-    processing_message_2_3 = await update.message.reply_text("⚡ *2:3 ছবিটি প্রসেস করা হচ্ছে\\.\\.\\.*", parse_mode="MarkdownV2")
+    processing_message_2_3 = await update.message.reply_text("⚡ *2:3 থাম্বনেইল আপলোড করা হচ্ছে\\.\\.\\.*", parse_mode="MarkdownV2")
     try:
         photo_2_3 = update.message.photo[-1]
         file_2_3 = await context.bot.get_file(photo_2_3.file_id)
@@ -84,20 +84,21 @@ async def get_img_ratio_2_3_photo(update: Update, context: CallbackContext) -> i
             raise Exception("Failed to upload 2:3 image")
 
         data_2_3 = res_2_3.json()
-        image_2_3_url = f"{BASE_URL}{data_2_3['local_url']}"
-        context.user_data["img"] = image_2_3_url  # Save 2:3 image URL
-
-        await context.bot.delete_message(chat_id=update.effective_chat.id, message_id=processing_message_2_3.message_id)
+        context.user_data["img"] = f"{BASE_URL}{data_2_3['local_url']}"
         await update.message.reply_text("🎬 *16:9 থাম্বনেইলের ছবি দিন:*", parse_mode="MarkdownV2")
-        return IMG_RATIO_16_9_PHOTO
 
     except Exception as e:
-        logging.error(f"Error processing 2:3 image: {e}")
-        await update.message.reply_text("❌ *2:3 ছবি আপলোডে সমস্যা হয়েছে, আবার চেষ্টা করুন\\!*", parse_mode="MarkdownV2")
-        return ConversationHandler.END # End conversation on error
+        logging.error(f"Error uploading 2:3 image: {e}")
+        await update.message.reply_text("❌ *2:3 থাম্বনেইল আপলোডে সমস্যা হয়েছে, আবার চেষ্টা করুন\\!*", parse_mode="MarkdownV2")
+        return ConversationHandler.END # অথবা অন্য কোন স্টেটে ফেরত যেতে পারেন
+
+    finally:
+        await context.bot.delete_message(chat_id=update.effective_chat.id, message_id=processing_message_2_3.message_id)
+    return IMG_RATIO_16_9_PHOTO
+
 
 async def get_img_ratio_16_9_photo(update: Update, context: CallbackContext) -> int:
-    processing_message_16_9 = await update.message.reply_text("⚡ *16:9 ছবিটি প্রসেস করা হচ্ছে\\.\\.\\.*", parse_mode="MarkdownV2")
+    processing_message_16_9 = await update.message.reply_text("⚡ *16:9 থাম্বনেইল আপলোড করা হচ্ছে\\.\\.\\.*", parse_mode="MarkdownV2")
     try:
         photo_16_9 = update.message.photo[-1]
         file_16_9 = await context.bot.get_file(photo_16_9.file_id)
@@ -113,57 +114,55 @@ async def get_img_ratio_16_9_photo(update: Update, context: CallbackContext) -> 
             raise Exception("Failed to upload 16:9 image")
 
         data_16_9 = res_16_9.json()
-        anime_img_16_9_url = f"{BASE_URL}{data_16_9['local_url']}"
-        context.user_data["anime_img"] = anime_img_16_9_url  # Save 16:9 image URL
-
-        await context.bot.delete_message(chat_id=update.effective_chat.id, message_id=processing_message_16_9.message_id)
-
+        context.user_data["anime_img"] = f"{BASE_URL}{data_16_9['local_url']}"
 
         anime = context.user_data.get("anime", "").strip()
-        img = context.user_data.get("img", "").strip() # Get 2:3 image URL
-        anime_img = context.user_data.get("anime_img", "").strip() # Get 16:9 image URL
+        img = context.user_data.get("img", "").strip()
+        anime_img = context.user_data.get("anime_img", "").strip()
 
         params = {
             "anime": anime,
             "img": img,
             "anime_img": anime_img,
         }
-        response = requests.get(API_URL, params=params)
-        response.raise_for_status()
-        data = response.json()
+        api_response = requests.get(API_URL, params=params)
+        api_response.raise_for_status()
+        api_data = api_response.json()
 
-        if data.get("status") == "success":
+        if api_data.get("status") == "success":
             message = (
                 "✅ *সফলভাবে আপডেট করা হয়েছে\\!* \n\n"
-                f"🔗 *[এনিমি পেজ ফটো]({data['anime_page_photo']})* \n"
-                f"📸 *[2:3 ইমেজ লিংক]({img})* \n" # Show 2:3 image URL
-                f"🎬 *[16:9 ইমেজ লিংক]({anime_img})* \n" # Show 16:9 image URL
-                f"📝 *মেসেজ:* `{data['message']}`"
+                f"🔗 *[এনিমি পেজ ফটো]({api_data['anime_page_photo']})* \n"
+                f"📸 *[2:3 থাম্বনেইল]({img})* \n"
+                f"🎬 *[16:9 থাম্বনেইল]({anime_img})* \n"
+                f"📝 *মেসেজ:* `{api_data['message']}`"
             )
         else:
-            message = f"❌ *ত্রুটি:* `{data.get('message', 'অজানা ত্রুটি')}`"
+            message = f"❌ *ত্রুটি:* `{api_data.get('message', 'অজানা ত্রুটি')}`"
 
     except Exception as e:
         logging.error(f"API Error: {str(e)}")
         message = "⚠️ *সার্ভারে সমস্যা হয়েছে, পরে চেষ্টা করুন\\!*"
+
     finally:
         await context.bot.delete_message(chat_id=update.effective_chat.id, message_id=processing_message_16_9.message_id)
-        await update.message.reply_text(message, parse_mode="MarkdownV2")
-        return ConversationHandler.END
+
+    await update.message.reply_text(message, parse_mode="MarkdownV2", disable_web_page_preview=True)
+    return ConversationHandler.END
 
 # বট চালু করা
 def main():
     app = Application.builder().token(TOKEN).build()
     app.add_handler(CommandHandler("start", start))
-    app.add_handler(MessageHandler(filters.PHOTO & ~filters.COMMAND, handle_photo)) # Keep normal photo handler
+    app.add_handler(MessageHandler(filters.PHOTO & ~filters.COMMAND, handle_photo)) # শুধুমাত্র কমান্ড ছাড়া ফটো হ্যান্ডেল করবে
 
     app.add_handler(
         ConversationHandler(
             entry_points=[CommandHandler("add", add_command)],
             states={
                 ANIME_NUMBER: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_anime_number)],
-                IMG_RATIO_2_3_PHOTO: [MessageHandler(filters.PHOTO & ~filters.COMMAND, get_img_ratio_2_3_photo)], # Expect photo now
-                IMG_RATIO_16_9_PHOTO: [MessageHandler(filters.PHOTO & ~filters.COMMAND, get_img_ratio_16_9_photo)], # Expect photo now
+                IMG_RATIO_2_3_PHOTO: [MessageHandler(filters.PHOTO & ~filters.COMMAND, get_img_ratio_2_3_photo)], # PHOTO ফিল্টার ব্যবহার করুন
+                IMG_RATIO_16_9_PHOTO: [MessageHandler(filters.PHOTO & ~filters.COMMAND, get_img_ratio_16_9_photo)], # PHOTO ফিল্টার ব্যবহার করুন
             },
             fallbacks=[],
         )
