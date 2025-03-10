@@ -105,19 +105,15 @@ async def get_img_ratio_16_9(update: Update, context: CallbackContext) -> int:
         response.raise_for_status()
         data = response.json()
 
-        # ... previous code ...
-
-    if data.get("status") == "success":
-        message = (
-            f"✅ *সফলভাবে আপডেট করা হয়েছে\\!*\n\n"  # Escaped '!' with backslash
-            f"🔗 [এনিমি পেজ ফটো]({data['anime_page_photo']})\n"
-            f"📸 [ইমেজ লিংক]({data['image']})\n"
-            f"📝 মেসেজ: `{data['message']}`"
-        )
-    else:
-        message = f"❌ *ত্রুটি:* `{data.get('message', 'অজানা ত্রুটি')}`"
-
-# ... rest of the code ...
+        if data.get("status") == "success":
+            message = (
+                f"✅ *সফলভাবে আপডেট করা হয়েছে\\!*\n\n"  # '!' কে এস্কেপ করা হয়েছে
+                f"🔗 [এনিমি পেজ ফটো]({data['anime_page_photo']})\n"
+                f"📸 [ইমেজ লিংক]({data['image']})\n"
+                f"📝 মেসেজ: `{data['message']}`"
+            )
+        else:
+            message = f"❌ *ত্রুটি:* `{data.get('message', 'অজানা ত্রুটি')}`"
 
     except Exception as e:
         logging.error(f"API Error: {str(e)}")
