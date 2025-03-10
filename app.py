@@ -1,6 +1,6 @@
 import logging
 import requests
-from telegram import Update, ParseMode
+from telegram import Update, ParseMode  # Corrected import statement here
 from telegram.ext import Application, MessageHandler, filters, CommandHandler, CallbackContext
 
 
